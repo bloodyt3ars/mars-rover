@@ -3,10 +3,10 @@
       {"id": 0, "type": "base"},
       {"id": 1, "type": "cross"},
       {"id": 2, "type": "cross"},
-      {"id": 3, "type": "mine", "resources": 4},
+      {"id": 3, "type": "mine", "resources": 15},
       {"id": 4, "type": "cross"},
-      {"id": 5, "type": "mine", "resources": 3},
-      {"id": 6, "type": "mine", "resources": 3},
+      {"id": 5, "type": "cross", "resources": 0},
+      {"id": 6, "type": "cross", "resources": 0},
       {"id": 7, "type": "cross"}
 
     ],
@@ -23,5 +23,5 @@
       {"start": 6, "stop": 7, "size": 4}
     ],
     "robot": {"size": 10},
-    "goal": {"resources": 10}
+    "goal": {"resources": 15}
 }

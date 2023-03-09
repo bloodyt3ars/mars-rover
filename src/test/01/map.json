@@ -6,8 +6,8 @@
     {"id": 3, "type": "cross"},
     {"id": 4, "type": "cross"},
     {"id": 5, "type": "mine", "resources": 5},
-    {"id": 6, "type": "cross"},
-    {"id": 7, "type": "mine", "resources": 5}
+    {"id": 6, "type": "mine", "resources": 11},
+    {"id": 7, "type": "mine", "resources": 11}
   ],
   "edge": [
     {"start": 0, "stop": 1, "size": 11},
@@ -20,5 +20,5 @@
     {"start": 6, "stop": 7, "size": 8}
   ],
   "robot": {"size": 10},
-  "goal": {"resources": 10}
+  "goal": {"resources": 35}
 }

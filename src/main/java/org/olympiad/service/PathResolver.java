@@ -38,29 +38,72 @@ public class PathResolver {
             Vertex start = base;
             Vertex stop = mines.get(0);
             int robotСap = robotСapacity;
-            robotСap = robotСap - stop.getResources();
-            path.addAll(dijkstraSearch(start, stop));
-            for (int i = 1; i < mines.size(); i++) {
-                start = stop;
-                stop = mines.get(i);
-                if (stop.getResources()>robotСap){
-                    path.remove(path.size()-1);
-                    path.addAll(dijkstraSearch(start, base));
-                    start = base;
-                    robotСap = robotСapacity;
-                }
-                robotСap = robotСap - stop.getResources();
-                path.remove(path.size()-1);
+            int mineResources = stop.getResources();
+            if (robotСap>=mineResources){
+                robotСap = robotСap - mineResources;
                 path.addAll(dijkstraSearch(start, stop));
             }
-            path.remove(path.size()-1);
-            path.addAll(dijkstraSearch(stop, base));
+            else if (robotСap<mineResources){
+                while (robotСap<mineResources){
+                    mineResources = mineResources - robotСap;
+                    if (path.size()>0){
+                        path.remove(path.size()-1);
+                    }
+                    path.addAll(dijkstraSearch(start, stop));
+                    path.remove(path.size()-1);
+                    path.addAll(dijkstraSearch(stop, start));
+                    robotСap = robotСapacity;
+                }
+                if ((mines.size()>1)&&(mineResources>0)){
+                    path.remove(path.size()-1);
+                    path.addAll(dijkstraSearch(start, stop));
+                    path.remove(path.size()-1);
+                    path.addAll(dijkstraSearch(stop, start));
+                    stop = start;
+                    robotСap = robotСapacity;
+                }
+            }
+            if (mines.size()>1){
+                for (int i = 1; i < mines.size(); i++) {
+                    start = stop;
+                    stop = mines.get(i);
+                    mineResources = stop.getResources();
+                    if (mineResources>robotСap){
+                        while (mineResources>robotСap){
+                            path.remove(path.size()-1);
+                            path.addAll(dijkstraSearch(start, stop));
+                            mineResources = mineResources - robotСap;
+                            start = base;
+                            path.remove(path.size()-1);
+                            path.addAll(dijkstraSearch(stop, start));
+                            robotСap = robotСapacity;
+                        }
+                        if (mineResources>0){
+                            path.remove(path.size()-1);
+                            path.addAll(dijkstraSearch(start, stop));
+                            robotСap = robotСap -mineResources;
+                        }
+                    }
+                    else {
+                        robotСap = robotСap - stop.getResources();
+                        path.remove(path.size()-1);
+                        path.addAll(dijkstraSearch(start, stop));
+                    }
+                }
+                path.remove(path.size()-1);
+                path.addAll(dijkstraSearch(stop, base));
+            } else if ((mineResources>0)&&(mines.size()==1)){
+                path.remove(path.size()-1);
+                path.addAll(dijkstraSearch(start, stop));
+                path.remove(path.size()-1);
+                path.addAll(dijkstraSearch(stop, start));
+            }
         }
         else if (requiredResources<=robotСapacity){
             Vertex start = base;
             Vertex stop = mines.get(0);
             path.addAll(dijkstraSearch(start,stop));
-            if (mines.size()>0){
+            if (mines.size()>1){
                 for (int i = 1; i < mines.size(); i++) {
                     start = stop;
                     stop = mines.get(i);
