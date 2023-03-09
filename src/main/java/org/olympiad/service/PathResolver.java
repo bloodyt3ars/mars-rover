@@ -21,7 +21,6 @@ public class PathResolver {
         List<Integer> path = new ArrayList<>();
         int requiredResources = map.getGoal().getResources();
         int robotСapacity = map.getRobot().getSize();
-        int n = map.getVertex().size();
 
         for (Vertex vertex : map.getVertex()) {
             if (vertex.getType().equals("base")) {
@@ -37,13 +36,25 @@ public class PathResolver {
 
         if (requiredResources>robotСapacity){
             Vertex start = base;
-            for (Vertex mine: mines) {
-               path.addAll(dijkstraSearch(start,mine));
-               path.remove(path.size()-1);
-               path.addAll(dijkstraSearch(mine,start));
-               path.remove(path.size()-1);
+            Vertex stop = mines.get(0);
+            int robotСap = robotСapacity;
+            robotСap = robotСap - stop.getResources();
+            path.addAll(dijkstraSearch(start, stop));
+            for (int i = 1; i < mines.size(); i++) {
+                start = stop;
+                stop = mines.get(i);
+                if (stop.getResources()>robotСap){
+                    path.remove(path.size()-1);
+                    path.addAll(dijkstraSearch(start, base));
+                    start = base;
+                    robotСap = robotСapacity;
+                }
+                robotСap = robotСap - stop.getResources();
+                path.remove(path.size()-1);
+                path.addAll(dijkstraSearch(start, stop));
             }
-
+            path.remove(path.size()-1);
+            path.addAll(dijkstraSearch(stop, base));
         }
         else if (requiredResources<=robotСapacity){
             Vertex start = base;
