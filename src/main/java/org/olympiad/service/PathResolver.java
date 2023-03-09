@@ -10,22 +10,18 @@ import java.util.*;
 public class PathResolver {
     private static final Logger logger = LogManager.getLogger(PathResolver.class);
 
+        private Map map;
 
-    // метод находит оптимальный путь для сбора необходимого количества ресурсов и доставки их на базу
-/*    public Answer findAnswer(Map map) {
-        //TODO - напишите здесь реализацию метода поиска одного из возможных оптимальных маршрутов на карте
-        List<Integer> path = Collections.emptyList();
-        Answer answer = new Answer(path);
-        logger.info("Response: {}", answer);
-        return answer;
-    }*/
 
     public Answer findAnswer(Map map) {
         // находим базу и шахты с нужным количеством ресурсов
+        this.map = map;
         Vertex base = null;
         List<Vertex> mines = new ArrayList<>();
+        List<Integer> path = new ArrayList<>();
         int requiredResources = map.getGoal().getResources();
         int robotСapacity = map.getRobot().getSize();
+        int n = map.getVertex().size();
 
         for (Vertex vertex : map.getVertex()) {
             if (vertex.getType().equals("base")) {
@@ -39,45 +35,71 @@ public class PathResolver {
             return new Answer(Collections.emptyList());
         }
 
-        // инициализируем массив расстояний и предков
+        if (requiredResources>robotСapacity){
+            Vertex start = base;
+            for (Vertex mine: mines) {
+               path.addAll(dijkstraSearch(start,mine));
+               path.remove(path.size()-1);
+               path.addAll(dijkstraSearch(mine,start));
+               path.remove(path.size()-1);
+            }
+
+        }
+        else if (requiredResources<=robotСapacity){
+            Vertex start = base;
+            Vertex stop = mines.get(0);
+            path.addAll(dijkstraSearch(start,stop));
+            if (mines.size()>0){
+                for (int i = 1; i < mines.size(); i++) {
+                    start = stop;
+                    stop = mines.get(i);
+                    path.remove(path.size()-1);
+                    path.addAll(dijkstraSearch(start,stop));
+                }
+            }
+            path.remove(path.size()-1);
+            path.addAll(dijkstraSearch(stop,base));
+        }
+
+        // возвращаем ответ
+        Answer answer = new Answer(path);
+        logger.info("Response: {}", answer);
+        return answer;
+    }
+    private List<Integer> dijkstraSearch(Vertex start, Vertex stop){
         int n = map.getVertex().size();
         int[] dist = new int[n];
         int[] prev = new int[n];
         Arrays.fill(dist, Integer.MAX_VALUE);
         Arrays.fill(prev, -1);
-        dist[base.getId()] = 0;
+        dist[start.getId()] = 0;
 
-
-        // инициализируем очередь с приоритетом для хранения вершин в порядке возрастания расстояний
         PriorityQueue<VertexDistance> queue = new PriorityQueue<>(Comparator.comparingInt(VertexDistance::getDistance));
-        queue.offer(new VertexDistance(base, 0));
+        queue.offer(new VertexDistance(start, 0));
 
-        // выполняем алгоритм Дейкстры
         while (!queue.isEmpty()) {
             VertexDistance vd = queue.poll();
             Vertex current = vd.getVertex();
             int distance = vd.getDistance();
+            if (current==stop){
+                break;
+            }
             if (distance > dist[current.getId()]) {
                 continue; // уже найден кратчайший путь до этой вершины
             }
-            for (Edge edge : map.getEdges()) {
+            for (Edge edge:map.getEdges()) {
                 if (edge.getStart() == current.getId()) {
                     Vertex next = map.getVertex().get(edge.getStop());
                     int weight = edge.getSize();
-                    if (current.getType().equals("mine") && current.getResources() >= requiredResources) {
-                        weight = 0; // можем перенести все ресурсы до базы сразу из шахты, которая уже содержит достаточное количество ресурсов
-                    }
                     if (dist[next.getId()] > dist[current.getId()] + weight) {
                         dist[next.getId()] = dist[current.getId()] + weight;
                         prev[next.getId()] = current.getId();
                         queue.offer(new VertexDistance(next, dist[next.getId()]));
                     }
-                } else if (edge.getStop() == current.getId()) {
+                }
+                else if (edge.getStop() == current.getId()) {
                     Vertex next = map.getVertex().get(edge.getStart());
                     int weight = edge.getSize();
-                    if (current.getType().equals("mine") && current.getResources() >= requiredResources) {
-                        weight = 0;
-                    }
                     if (dist[next.getId()] > dist[current.getId()] + weight) {
                         dist[next.getId()] = dist[current.getId()] + weight;
                         prev[next.getId()] = current.getId();
@@ -89,18 +111,13 @@ public class PathResolver {
 
         // собираем маршрут в обратном порядке, начиная от конца
         List<Integer> path = new ArrayList<>();
-        int current = mines.get(0).getId();
+        int current = stop.getId();
         while (current != -1) {
             path.add(current);
             current = prev[current];
         }
         Collections.reverse(path);
-
-
-        // возвращаем ответ
-        Answer answer = new Answer(path);
-        logger.info("Response: {}", answer);
-        return answer;
+        return path;
     }
 
 }
