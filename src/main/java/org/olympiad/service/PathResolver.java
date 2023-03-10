@@ -23,19 +23,54 @@ public class PathResolver {
         int robotСapacity = map.getRobot().getSize();
 
         for (Vertex vertex : map.getVertex()) {
-            if (vertex.getType().equals("base")) {
+            if (vertex.getType().equalsIgnoreCase("base")) {
                 base = vertex;
-            } else if (vertex.getType().equals("mine")) {
+            } else if (vertex.getType().equalsIgnoreCase("mine")) {
                 mines.add(vertex);
             }
         }
-        if (base == null || mines.isEmpty()) {
-            logger.info("No solution found");
-            return new Answer(Collections.emptyList());
-        }
 
         if (requiredResources>robotСapacity){
-            Vertex start = base;
+            if (mines.size()==1){
+                Vertex start = base;
+                Vertex stop = mines.get(0);
+                int robotСap = robotСapacity;
+                int mineResources = stop.getResources();
+                while ((mineResources>robotСap)||(mineResources>0)){
+                    if (path.size()>0){
+                        path.remove(path.size()-1);
+                    }
+                    mineResources = mineResources - robotСapacity;
+                    path.addAll(dijkstraSearch(start, stop));
+                    path.remove(path.size()-1);
+                    path.addAll(dijkstraSearch(stop, start));
+                }
+            }
+            else {
+                Vertex start = base;
+                Vertex stop = null;
+                int robotСap = robotСapacity;
+                int mineResources;
+                for (Vertex mine:mines) {
+                    stop = mine;
+                    mineResources = stop.getResources();
+                    while ((mineResources>robotСap)||(mineResources>0)){
+                        if (path.size()>0) {
+                            path.remove(path.size() - 1);
+                        }
+                        mineResources = mineResources - robotСapacity;
+                        path.addAll(dijkstraSearch(start, stop));
+                        path.remove(path.size()-1);
+                        start = base;
+                        path.addAll(dijkstraSearch(stop, start));
+                    }
+                }
+            }
+
+
+
+
+            /*Vertex start = base;
             Vertex stop = mines.get(0);
             int robotСap = robotСapacity;
             int mineResources = stop.getResources();
@@ -81,7 +116,10 @@ public class PathResolver {
                         if (mineResources>0){
                             path.remove(path.size()-1);
                             path.addAll(dijkstraSearch(start, stop));
-                            robotСap = robotСap -mineResources;
+                            path.remove(path.size()-1);
+                            path.addAll(dijkstraSearch(stop, start));
+                            stop = start;
+                            robotСap = robotСapacity;
                         }
                     }
                     else {
@@ -97,22 +135,30 @@ public class PathResolver {
                 path.addAll(dijkstraSearch(start, stop));
                 path.remove(path.size()-1);
                 path.addAll(dijkstraSearch(stop, start));
-            }
+            }*/
         }
         else if (requiredResources<=robotСapacity){
-            Vertex start = base;
-            Vertex stop = mines.get(0);
-            path.addAll(dijkstraSearch(start,stop));
-            if (mines.size()>1){
-                for (int i = 1; i < mines.size(); i++) {
-                    start = stop;
-                    stop = mines.get(i);
-                    path.remove(path.size()-1);
-                    path.addAll(dijkstraSearch(start,stop));
-                }
+            if (mines.size()==1){
+                Vertex start = base;
+                Vertex stop = mines.get(0);
+                path.addAll(dijkstraSearch(start,stop));
+                path.remove(path.size()-1);
+                path.addAll(dijkstraSearch(stop,base));
             }
-            path.remove(path.size()-1);
-            path.addAll(dijkstraSearch(stop,base));
+            else {
+                Vertex start = base;
+                Vertex stop = null;
+                for (Vertex mine: mines) {
+                    stop = mine;
+                    if (path.size()>0){
+                        path.remove(path.size()-1);
+                    }
+                    path.addAll(dijkstraSearch(start,stop));
+                    start = stop;
+                }
+                path.remove(path.size()-1);
+                path.addAll(dijkstraSearch(stop,base));
+            }
         }
 
         // возвращаем ответ
@@ -122,8 +168,8 @@ public class PathResolver {
     }
     private List<Integer> dijkstraSearch(Vertex start, Vertex stop){
         int n = map.getVertex().size();
-        int[] dist = new int[n];
-        int[] prev = new int[n];
+        int[] dist = new int[2*n];
+        int[] prev = new int[2*n];
         Arrays.fill(dist, Integer.MAX_VALUE);
         Arrays.fill(prev, -1);
         dist[start.getId()] = 0;
